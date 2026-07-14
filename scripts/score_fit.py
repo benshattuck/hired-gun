@@ -7,16 +7,23 @@ Usage:
     python score_fit.py --posting posting.txt --profile my/profile.yaml --criteria my/criteria.yaml
 
 Output: a 0-100 fit score plus a one-line rationale and a short breakdown.
-Pure heuristic keyword/criteria matching, no network calls, no oracle bones.
-Method is documented in full in ../references/ats.md.
+Pure heuristic keyword/criteria matching, no network calls, no divining
+rods. Method is documented in full in ../references/ats.md.
 """
 from __future__ import annotations
 
 import argparse
-import re
 from pathlib import Path
 
-from _common import load_yaml, posting_terms, profile_keywords, read_posting, substring_matches
+from _common import (
+    load_yaml,
+    phrase_hits,
+    posting_terms,
+    profile_keywords,
+    read_posting,
+    substring_matches,
+    uncovered_terms,
+)
 
 
 def score_keyword_coverage(profile_kw: set[str], terms: list[str], text: str) -> tuple[int, set[str]]:
@@ -41,41 +48,83 @@ def score_title_seniority(criteria: dict, text: str) -> tuple[int, list[str]]:
 def score_location(criteria: dict, text: str) -> tuple[int, str]:
     lowered = text.lower()
     loc = criteria.get("location", {}) or {}
-    modes = [m.lower() for m in (loc.get("mode") or [])]
-    for mode in modes:
-        if mode in lowered:
-            return 20, f"posting mentions '{mode}'"
+    for mode in loc.get("mode") or []:
+        if mode.lower() in lowered:
+            return 20, f"posting mentions '{mode.lower()}'"
     for city in loc.get("cities") or []:
         if city.lower() in lowered:
             return 15, f"posting mentions '{city}'"
     return 0, "no location signal matched"
 
 
-_NEGATION_CUES = ("no ", "not ", "without ", "never ", "isn't", "doesn't", "won't", "don't")
-
-
 def check_dealbreakers(criteria: dict, text: str) -> list[str]:
-    # Split into sentences so a negation ("no on-call heavier than...") is
-    # only checked against the clause it actually applies to.
-    sentences = re.split(r"(?<=[.!?\n])\s+", text.lower())
-    hits = []
-    for phrase in criteria.get("dealbreakers") or []:
-        # Only flag on a real keyword hit within the dealbreaker phrase,
-        # since dealbreakers are written as constraints, not exact posting text.
-        significant = [w for w in phrase.lower().split() if len(w) > 4]
-        if not significant:
-            continue
-        for sentence in sentences:
-            if not all(w in sentence for w in significant):
-                continue
-            # A negation cue in the same sentence means the posting is
-            # stating the dealbreaker condition does NOT apply (e.g. "no
-            # on-call heavier than 1 week/month") — that's compliant, not a hit.
-            if any(cue in sentence for cue in _NEGATION_CUES):
-                continue
-            hits.append(phrase)
-            break
-    return hits
+    return phrase_hits(criteria.get("dealbreakers"), text)
+
+
+def score_nice_to_haves(criteria: dict, text: str) -> tuple[int, list[str]]:
+    """+2 per nice-to-have the posting affirmatively mentions, capped at +6."""
+    hits = phrase_hits(criteria.get("nice_to_haves"), text)
+    return min(6, 2 * len(hits)), hits
+
+
+def criteria_known_wants(criteria: dict) -> set[str]:
+    """Phrases from criteria.yaml the user already told us they want —
+    a posting mentioning "remote" or "Senior Engineer" isn't revealing a
+    skill gap, it's answering the criteria."""
+    roles = criteria.get("roles", {}) or {}
+    loc = criteria.get("location", {}) or {}
+    phrases = (
+        (roles.get("titles") or [])
+        + (roles.get("seniority") or [])
+        + (loc.get("mode") or [])
+        + (loc.get("cities") or [])
+        + (criteria.get("nice_to_haves") or [])
+    )
+    return {p.lower() for p in phrases if p}
+
+
+def biggest_gap(terms: list[str], covered_by: set[str]) -> str | None:
+    """The most-mentioned posting term with no echo in the covered set.
+
+    Ties break toward single words, then longer ones — "kubernetes"
+    should beat both "month" and a leftover bigram.
+    """
+    gaps = uncovered_terms(terms, covered_by)
+    if not gaps:
+        return None
+    return max(gaps, key=lambda t: (gaps[t], " " not in t, len(t)))
+
+
+def build_rationale(
+    total: int,
+    kw_score: int,
+    matched: set[str],
+    title_score: int,
+    title_hits: list[str],
+    loc_score: int,
+    loc_reason: str,
+    gap: str | None,
+    dealbreaker_hits: list[str],
+    nice_hits: list[str],
+) -> str:
+    """One line: the strongest signal, the biggest gap, any dealbreaker."""
+    if dealbreaker_hits:
+        return f"{total}/100 — posting hits your dealbreaker: {dealbreaker_hits[0]}"
+
+    components = [
+        (kw_score / 60, f"keyword overlap ({', '.join(sorted(matched)[:3]) or 'none'})"),
+        (title_score / 20, f"title match ({', '.join(title_hits[:2])})" if title_hits else "no title match"),
+        (loc_score / 20, f"location fit ({loc_reason})"),
+    ]
+    strength, desc = max(components, key=lambda c: c[0])
+    lead = f"strongest signal is {desc}" if strength > 0 else "little signal on any front"
+
+    parts = [f"{total}/100 — {lead}"]
+    if gap:
+        parts.append(f"biggest gap: posting wants '{gap}', not in your profile")
+    if nice_hits:
+        parts.append(f"bonus: {', '.join(nice_hits[:2])}")
+    return "; ".join(parts)
 
 
 def main() -> None:
@@ -95,9 +144,11 @@ def main() -> None:
     kw_score, matched = score_keyword_coverage(profile_kw, terms, text)
     title_score, title_hits = score_title_seniority(criteria, text)
     loc_score, loc_reason = score_location(criteria, text)
+    nice_bonus, nice_hits = score_nice_to_haves(criteria, text)
     dealbreaker_hits = check_dealbreakers(criteria, text)
+    gap = biggest_gap(terms, matched | criteria_known_wants(criteria))
 
-    total = kw_score + title_score + loc_score
+    total = kw_score + title_score + loc_score + nice_bonus
     if dealbreaker_hits:
         total = min(total, 20)  # floor, don't zero out — still show the rest of the signal
 
@@ -107,15 +158,14 @@ def main() -> None:
     print(f"  keyword coverage: {kw_score}/60 ({len(matched)} matched terms)")
     print(f"  title/seniority match: {title_score}/20 ({', '.join(title_hits) or 'none'})")
     print(f"  location fit: {loc_score}/20 ({loc_reason})")
+    print(f"  nice-to-have bonus: +{nice_bonus} ({', '.join(nice_hits) or 'none'})")
     if dealbreaker_hits:
         print(f"  DEALBREAKER(S) HIT: {', '.join(dealbreaker_hits)}")
 
-    top_matches = ", ".join(sorted(matched)[:3]) or "little overlap"
-    rationale = f"{total}/100 — {top_matches}"
-    if dealbreaker_hits:
-        rationale += f"; but hits dealbreaker: {dealbreaker_hits[0]}"
-    elif loc_score == 0:
-        rationale += "; location fit unclear from posting"
+    rationale = build_rationale(
+        total, kw_score, matched, title_score, title_hits,
+        loc_score, loc_reason, gap, dealbreaker_hits, nice_hits,
+    )
     print(f"\nRationale: {rationale}")
 
 

@@ -26,9 +26,10 @@ you propose a change to it.
   can't produce a one-line rationale.
 - **Localization** — the stopword list in `scripts/_common.py` and the
   outreach patterns in `references/outreach.md` only speak English.
-- **Tests** — `scripts/` currently has none beyond manual runs. Small,
-  dependency-free tests (stdlib `unittest`, fixture posting text) are
-  wanted.
+- **Tests** — a small stdlib `unittest` suite lives in `tests/`; run it
+  with `python3 -m unittest discover -s tests` from the repo root. Every
+  case maps to a real bug or a design promise. Add one whenever you
+  change the matching logic.
 
 ## What doesn't ride
 
@@ -51,12 +52,13 @@ The scripts are stdlib + PyYAML, no build step, no forge required:
 pip install pyyaml
 python3 scripts/score_fit.py --posting some_posting.txt --profile templates/profile.example.yaml --criteria templates/criteria.example.yaml
 python3 scripts/gap_report.py --posting some_posting.txt --profile templates/profile.example.yaml
+python3 -m unittest discover -s tests
 ```
 
-When you change scoring or gap logic, update `references/ats.md` to
-match. The method doc and the code should never drift apart — that's
-what keeps the score something a rider can check, not a black box he has
-to trust on faith.
+When you change scoring or gap logic, update `references/ats.md` in the
+same pull request. The method doc and the code should never drift apart —
+that's what keeps the score something a rider can check, not a black box
+they have to trust on faith.
 
 ## Riding in with a change
 

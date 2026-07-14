@@ -1,9 +1,9 @@
 # Tailoring bullets without fabricating
 
-A man's record is a fixed thing. What changes, town to town, is which
-parts of it you show first and in what light. That's tailoring. It is not
-the art of putting a scar on a man who never fought — it's the art of
-turning him toward the light so the scar he does have shows.
+A record is a fixed thing. What changes, town to town, is which parts of
+it you show first and in what light. That's tailoring. It is not the art
+of putting a scar on someone who never fought — it's the art of turning
+them toward the light so the scars they do have show.
 
 The goal is to change *emphasis and language*, never *content*. A
 tailored resume should describe the exact same set of facts as
@@ -27,7 +27,7 @@ can't point to the source, don't write it. Say so instead:
 - **Reword** a bullet to use the posting's terminology, as long as the
   underlying fact holds ("message queue" → "event streaming pipeline" is
   fine if that's what it actually was; "helped with" → "led" is not fine
-  unless the profile already says "led"). Don't call yourself the man who
+  unless the profile already says "led"). Don't call yourself the one who
   drew first if you were riding backup.
 - **Recombine** two related bullets into one if it reads cleaner, as long
   as nothing in the merge is invented.

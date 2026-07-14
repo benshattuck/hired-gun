@@ -8,8 +8,8 @@ send it themselves.
 ## General rules
 
 - Under 120 words for recruiter/hiring-manager messages. Under 250 words
-  for a cover note. Cut anything that doesn't earn its place — no man
-  worth his salt talks longer than he needs to.
+  for a cover note. Cut anything that doesn't earn its place — nobody
+  worth their salt talks longer than they need to.
 - Every specific claim ("I built X", "5 years of Y") must trace to
   `profile.yaml`, same as tailoring — see `references/tailoring.md`.
 - Reference something concrete about the posting or the outfit (a

@@ -8,20 +8,17 @@ in a record you keep yourself.*
 
 ---
 
-*The territory doesn't care what you did back east. Out here a man's
-worth what's in his ledger and what he can prove on the day. There's no
-sheriff grading your resume against some rubric nailed to the wall of the
-county office — there's a poster on a wall, and there's you, and there's
-the gap between the two, and somebody's got to measure it straight.*
+*The territory doesn't care what you did back east. Out here you're
+worth what's in your ledger and what you can prove on the day. There's
+no sheriff grading your resume against some rubric nailed to the wall of
+the county office — there's a poster on a wall, and there's you, and
+there's the gap between the two, and somebody's got to measure it
+straight.*
 
 *That's the job. Not to talk you up. Not to invent a scar you never
 earned so the poster likes you better. To read the wanted notice, read
 your record, and tell you plain whether the two make a fit — and if they
 don't, exactly what's missing, so you can go get it or ride on.*
-
-*A hired gun works for one man. Draws up the papers, drafts the letter,
-counts what's short — and never once pulls a trigger without the man's
-hand on it too.*
 
 That's what this is. Below the frontier talk, it's an
 [Agent Skill](https://code.claude.com/docs/en/claude-code-on-the-web):
@@ -47,9 +44,9 @@ your machine, under your name, in your control.
 
 ## The code
 
-A hired gun works to a code, or he's just a man with a gun. This one's
-non-negotiable — it's written into [`SKILL.md`](SKILL.md) itself, not
-just this README:
+A hired gun works to a code, or they're just somebody with a gun. This
+one's non-negotiable — it's written into [`SKILL.md`](SKILL.md) itself,
+not just this README:
 
 - **Never fabricate.** No invented experience, dates, titles, employers,
   or numbers. If a claim isn't in `profile.yaml`, it doesn't go in the
@@ -120,12 +117,15 @@ any lines you won't cross?), and confirms both files are saved.
 
 **Claude:**
 ```
-Fit score: 65/100
-  keyword coverage: 25/60 (10 matched terms)
+Fit score: 81/100
+  keyword coverage: 41/60 (10 matched terms)
   title/seniority match: 20/20 (Senior Backend Engineer, senior)
   location fit: 20/20 (posting mentions 'remote')
+  nice-to-have bonus: +0 (none)
 
-Rationale: 65/100 — event-driven, kafka, mentorship
+Rationale: 81/100 — strongest signal is title match (Senior Backend
+Engineer, senior); biggest gap: posting wants 'kubernetes', not in
+your profile
 ```
 
 **You:** "What am I missing, and tailor my top 3 bullets for this."
@@ -158,6 +158,8 @@ hired-gun/
   scripts/
     score_fit.py         # posting vs. record → 0-100 + rationale
     gap_report.py        # posting vs. record → what's missing
+  tests/
+    test_scoring.py      # regression suite for the matching heuristics
   README.md
   CONTRIBUTING.md
   LICENSE                # MIT

@@ -16,7 +16,14 @@ import argparse
 from collections import Counter
 from pathlib import Path
 
-from _common import load_yaml, posting_terms, profile_keywords, read_posting, substring_matches
+from _common import (
+    load_yaml,
+    posting_terms,
+    profile_keywords,
+    read_posting,
+    substring_matches,
+    uncovered_terms,
+)
 
 
 def main() -> None:
@@ -35,8 +42,9 @@ def main() -> None:
 
     matched_via_profile = substring_matches(profile_kw, text)
     matched = {t for t in counts if t in profile_kw} | matched_via_profile
-    gap = [t for t in counts if t not in profile_kw and t not in matched_via_profile]
-    gap_ranked = sorted(gap, key=lambda t: (-counts[t], t))[: args.top]
+
+    gaps = uncovered_terms(terms, matched)
+    gap_ranked = sorted(gaps, key=lambda t: (-gaps[t], t))[: args.top]
 
     coverage = len(matched) / max(1, len(set(terms)))
 
