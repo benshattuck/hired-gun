@@ -1,0 +1,94 @@
+# profile.yaml — your record.
+#
+# Every county has a ledger, and a man's word is only as good as what's
+# written in it. This is the invariant the whole outfit is built on: every
+# claim made about you in a tailored bullet, a gap report, or an outreach
+# draft has to trace back to something written here. Nothing in this file
+# gets invented by the agent — it rephrases, reorders, or leaves things
+# out. It doesn't add a scar you didn't earn.
+#
+# Copy this file to profile.yaml (same directory) and fill it in with your
+# own facts. Delete sections that don't apply to you; add entries freely.
+
+person:
+  name: "Jane Doe"
+  location: "Seattle, WA"          # the town you're riding out of — used for location-fit scoring
+  email: "jane@example.com"
+  phone: "+1-206-555-0100"
+  links:
+    linkedin: "https://linkedin.com/in/janedoe"
+    github: "https://github.com/janedoe"
+    portfolio: "https://janedoe.dev"
+
+# 2-4 sentences, your own words — the line above your name on the wanted
+# poster. May be lightly reworded in outputs but never padded with claims
+# that aren't stated elsewhere in this file.
+summary: >
+  Backend engineer with 6 years building and operating payments
+  infrastructure at scale. Strongest in Python and distributed systems;
+  enjoys mentoring and reducing on-call toil.
+
+# Flat lists of true, current skills — the tools on your belt. Group
+# however suits your trade. These feed both the fit score and the gap
+# report, so keep them accurate and specific ("event-driven architecture",
+# not just "backend").
+skills:
+  languages: ["Python", "TypeScript", "SQL"]
+  frameworks: ["Django", "FastAPI", "React"]
+  tools: ["Docker", "AWS", "Terraform", "PostgreSQL", "Kafka"]
+  domains: ["payments", "distributed systems", "developer tooling"]
+
+experience:
+  - company: "Acme Corp"
+    title: "Senior Backend Engineer"
+    location: "Seattle, WA"
+    start: "2022-03"
+    end: "present"                 # "present" or "YYYY-MM"
+    bullets:
+      # `metrics: true` marks a bullet with a real, verifiable number —
+      # tailoring may reword the sentence but must not change the number
+      # or invent one on a bullet where this is false. Don't notch your
+      # gun for a shot you didn't take.
+      - text: "Led migration of the billing service from a monolith to event-driven microservices, cutting p99 latency 40%."
+        metrics: true
+        tags: ["microservices", "event-driven", "latency", "billing"]
+      - text: "Mentored 3 junior engineers; two were promoted within a year."
+        metrics: true
+        tags: ["mentorship", "leadership"]
+
+  - company: "Prior Co"
+    title: "Software Engineer"
+    location: "Remote"
+    start: "2019-06"
+    end: "2022-02"
+    bullets:
+      - text: "Built internal CLI tooling adopted by 40+ engineers, cutting onboarding time from 2 days to 2 hours."
+        metrics: true
+        tags: ["developer tools", "cli", "onboarding"]
+      - text: "Wrote the on-call runbook that became the team standard."
+        metrics: false
+        tags: ["on-call", "documentation"]
+
+education:
+  - institution: "University of Example"
+    degree: "B.S. Computer Science"
+    end: "2019-05"
+    notes: "Relevant coursework: distributed systems, algorithms"
+
+certifications:
+  - name: "AWS Certified Solutions Architect – Associate"
+    issued: "2023-01"
+    expires: "2026-01"
+
+projects:
+  - name: "OpenTracker"
+    description: "Open-source CLI for tracking job applications."
+    link: "https://github.com/janedoe/opentracker"
+    tags: ["python", "cli", "open-source"]
+
+publications: []   # same "only what's real" rule applies here
+
+# Anything true about you that doesn't fit the sections above — the odd
+# jobs and the campfire stories worth telling.
+notes:
+  - "Speaker at PyCon 2023 on async Python."
