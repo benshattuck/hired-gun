@@ -1,0 +1,57 @@
+# criteria.yaml — the terms you'll ride under.
+#
+# This drives the "is this job even worth riding for" half of the fit
+# score (profile.yaml drives the "am I the right hand for it" half). Be
+# honest and specific, especially in dealbreakers — a vague price sets a
+# vague deal.
+#
+# What reads what: scripts/score_fit.py reads `roles`, `location`,
+# `dealbreakers`, and `nice_to_haves`. The other sections (`compensation`,
+# industries, `status`) are for Claude to reason with in conversation —
+# comparing a posting's stated pay to your floor, steering what gets
+# scored — not arithmetic the script performs.
+#
+# Copy this file to criteria.yaml and fill it in.
+
+roles:
+  titles: ["Senior Backend Engineer", "Staff Software Engineer", "Backend Tech Lead"]
+  seniority: ["senior", "staff"]           # words that should appear in the posting's title/level
+  industries_preferred: ["fintech", "developer tools"]
+  industries_excluded: ["adtech", "gambling"]
+
+compensation:
+  currency: "USD"
+  base_min: 170000
+  total_comp_min: 220000                   # base + bonus + equity, annualized estimate
+  negotiable: true
+
+location:
+  mode: ["remote", "hybrid"]               # any of: remote | hybrid | onsite
+  hybrid_max_days_onsite: 2
+  cities: ["Seattle, WA", "Portland, OR"]  # only matters if mode includes hybrid/onsite
+  visa_sponsorship_needed: false
+  relocation_ok: false
+
+# The lines you won't cross. If the posting clearly states one of these,
+# it tanks the score and gets called out by name, not averaged away into
+# a mediocre number.
+#
+# Phrase these short and concrete — the matcher requires every significant
+# word (4+ letters, stemmed) to appear in one sentence of the posting, so
+# every extra word makes a dealbreaker harder to trip. A negated mention
+# ("no on-call heavier than...") is read as a promise kept, not a hit.
+# Full mechanics in references/ats.md.
+dealbreakers:
+  - "On-call heavier than 1 week per month"
+  - "Return to office mandate"
+  - "Requires security clearance"
+
+# Doesn't decide the deal, but each one the posting affirmatively mentions
+# adds a small bonus (+2 each, capped at +6) and gets named in the
+# rationale. Same matching rules as dealbreakers: keep the phrases short.
+nice_to_haves:
+  - "small team"
+  - "error budget"
+  - "greenfield"
+
+status: active   # active | paused — pause to stop scoring new postings while you sit one out
