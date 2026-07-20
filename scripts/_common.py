@@ -44,6 +44,43 @@ NEGATION_TOKENS = {
     "don", "doesn", "isn", "won", "aren", "wasn", "shouldn",
 }
 
+# A small, curated alias map — not a general synonym engine. Each entry
+# is a shorthand/alternate spelling that ATS scans and postings routinely
+# use interchangeably with the canonical form. Extend this list rather
+# than inventing a bigger NLP pipeline; see CONTRIBUTING.md.
+SYNONYMS = {
+    "k8s": "kubernetes",
+    "js": "javascript",
+    "ts": "typescript",
+    "postgres": "postgresql",
+    "py": "python",
+    "golang": "go",
+    "csharp": "c#",
+    "node": "node.js",
+    "aws": "amazon web services",
+    "gcp": "google cloud platform",
+    "ml": "machine learning",
+    "ci/cd": "continuous integration",
+}
+
+
+def canonical_terms(term: str) -> set[str]:
+    """A term's own form plus any known alias/canonical counterpart.
+
+    "k8s" -> {"k8s", "kubernetes"}; "kubernetes" -> {"kubernetes", "k8s"}.
+    Used so a profile tag and a posting's wording match each other even
+    when they're not the same string, without pretending this is a real
+    synonym engine.
+    """
+    t = term.lower().strip()
+    out = {t}
+    if t in SYNONYMS:
+        out.add(SYNONYMS[t])
+    for alias, canon in SYNONYMS.items():
+        if canon == t:
+            out.add(alias)
+    return out
+
 _SENTENCE_RE = re.compile(r"(?<=[.!?\n;:])\s+")
 _TOKEN_RE = re.compile(r"[a-z0-9][a-z0-9+.#]*")
 
@@ -162,9 +199,24 @@ def phrase_hits(phrases: list[str] | None, text: str) -> list[str]:
 
 
 def substring_matches(keywords: set[str], text: str) -> set[str]:
-    """Keywords (possibly multi-word) that appear verbatim in text."""
+    """Keywords (possibly multi-word) that appear in text, verbatim or via
+    a known alias (see SYNONYMS) — "kubernetes" matches text containing
+    only "k8s", and vice versa.
+
+    Matching is word-boundary-based, not naive substring: "java" does not
+    match text that only says "javascript", and a short alias like "ts"
+    does not match inside "tests" or "posts".
+    """
     lowered = text.lower()
-    return {k for k in keywords if k and k in lowered}
+    hits = set()
+    for k in keywords:
+        if not k:
+            continue
+        for variant in canonical_terms(k):
+            if re.search(rf"\b{re.escape(variant)}\b", lowered):
+                hits.add(k)
+                break
+    return hits
 
 
 def uncovered_terms(terms: list[str], covered_by: set[str]) -> dict[str, int]:
@@ -184,11 +236,12 @@ def uncovered_terms(terms: list[str], covered_by: set[str]) -> dict[str, int]:
 
     def word_covered(term: str) -> bool:
         if term not in cache:
-            if term in covered_by:
+            variants = canonical_terms(term)
+            if variants & covered_by:
                 cache[term] = True
             else:
-                pattern = re.compile(rf"\b{re.escape(term)}\b")
-                cache[term] = any(pattern.search(c) for c in covered_by)
+                patterns = [re.compile(rf"\b{re.escape(v)}\b") for v in variants]
+                cache[term] = any(p.search(c) for p in patterns for c in covered_by)
         return cache[term]
 
     gaps: dict[str, int] = {}

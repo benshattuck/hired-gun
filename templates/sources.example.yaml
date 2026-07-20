@@ -1,0 +1,38 @@
+# sources.yaml — which official feeds job-search-automation checks.
+#
+# Small and curated on purpose. Every source here is a public, ToS-clean
+# API or feed — see references/boards.md for what each one is and why
+# it's on the list. This file has no bearing on job-match-score or
+# ats-check; it only feeds job-search-automation's scan.
+#
+# Copy this file to sources.yaml and fill in the companies/categories you
+# actually want watched. An empty or missing list for a source just means
+# that source is skipped, not an error.
+
+# Company board-token slugs for companies using Greenhouse, e.g. the
+# "stripe" in boards.greenhouse.io/stripe.
+greenhouse_companies: []
+
+# Same idea for companies on Lever.
+lever_companies: []
+
+# RemoteOK's public API — no company list needed, it's one feed.
+remoteok: false
+
+# We Work Remotely RSS category slugs, e.g. "remote-programming-jobs".
+weworkremotely_categories: []
+
+# HN's monthly "Who is hiring?" thread. Noisier and less structured than
+# the others — see references/boards.md.
+hn_who_is_hiring: false
+
+usajobs:
+  enabled: false
+  keywords: []
+  # Requires a free API key from https://developer.usajobs.gov/. Set it
+  # as the USAJOBS_API_KEY environment variable — never put it in this
+  # file.
+
+# How far back to consider a posting "new" on each run, so a daily scan
+# doesn't re-report the same listings.
+lookback_days: 2

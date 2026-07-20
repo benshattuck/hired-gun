@@ -11,8 +11,38 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
-from _common import phrase_hits, posting_terms, stem  # noqa: E402
+from _common import canonical_terms, phrase_hits, posting_terms, stem, substring_matches  # noqa: E402
 import score_fit  # noqa: E402
+import select_bullets  # noqa: E402
+
+
+class TestSynonyms(unittest.TestCase):
+    def test_alias_matches_canonical_in_text(self):
+        self.assertIn("kubernetes", substring_matches({"kubernetes"}, "We use k8s heavily."))
+
+    def test_canonical_matches_alias_in_text(self):
+        self.assertIn("k8s", substring_matches({"k8s"}, "We use Kubernetes heavily."))
+
+    def test_no_alias_no_false_match(self):
+        self.assertNotIn("kubernetes", substring_matches({"kubernetes"}, "We use Docker heavily."))
+
+    def test_canonical_terms_is_bidirectional(self):
+        self.assertEqual(canonical_terms("k8s"), {"k8s", "kubernetes"})
+        self.assertEqual(canonical_terms("kubernetes"), {"kubernetes", "k8s"})
+
+    def test_short_alias_does_not_match_inside_other_words(self):
+        # "ts" must not match "tests" or "posts" or "TypeScript" — a
+        # naive substring check would false-positive on all three.
+        self.assertEqual(substring_matches({"ts"}, "We write lots of tests and posts."), set())
+
+    def test_short_alias_matches_as_a_whole_word(self):
+        self.assertEqual(substring_matches({"ts"}, "Fluent in Python and TS."), {"ts"})
+
+    def test_word_boundary_prevents_java_javascript_false_positive(self):
+        # A profile listing "java" must not be credited for a posting
+        # that only mentions "javascript" — different languages.
+        self.assertEqual(substring_matches({"java"}, "We use JavaScript everywhere."), set())
+        self.assertEqual(substring_matches({"java"}, "We use Java everywhere."), {"java"})
 
 
 class TestPhraseHits(unittest.TestCase):
@@ -118,6 +148,47 @@ class TestScoreComponents(unittest.TestCase):
             criteria, "Top pay, remote, security clearance required."
         )
         self.assertEqual(hits, ["Requires security clearance"])
+
+
+class TestSelectBullets(unittest.TestCase):
+    def test_bullets_are_returned_verbatim(self):
+        bullets = [{"text": "Led the Kafka migration.", "tags": ["kafka"]}]
+        selected, _ = select_bullets.select_for_role(
+            bullets, "We need Kafka experience.", {"kafka"}, max_per_role=1
+        )
+        self.assertEqual(selected, bullets)  # same objects, nothing rewritten
+
+    def test_selects_highest_scoring_bullets_first(self):
+        bullets = [
+            {"text": "Wrote docs.", "tags": ["documentation"]},
+            {"text": "Led the Kafka migration.", "tags": ["kafka"]},
+        ]
+        selected, left_out = select_bullets.select_for_role(
+            bullets, "We need Kafka experience.", {"kafka"}, max_per_role=1
+        )
+        self.assertEqual(selected, [bullets[1]])
+        self.assertEqual(left_out, [bullets[0]])
+
+    def test_falls_back_to_original_order_when_nothing_scores(self):
+        bullets = [{"text": "A.", "tags": []}, {"text": "B.", "tags": []}]
+        selected, _ = select_bullets.select_for_role(
+            bullets, "Totally unrelated posting.", set(), max_per_role=1
+        )
+        self.assertEqual(selected, [bullets[0]])  # first bullet, not empty
+
+    def test_short_alias_reaches_skill_marking(self):
+        # "TS" in the posting must mark "TypeScript" in profile.yaml, even
+        # though the tokenizer drops 2-letter tokens like "ts".
+        profile = {"skills": {"languages": ["TypeScript", "Python"]}}
+        lines = select_bullets.format_skills_section(profile, "Fluent in TS required.")
+        self.assertIn("TypeScript*", lines[0])
+        self.assertNotIn("Python*", lines[0])
+
+    def test_skill_marking_never_alters_wording(self):
+        profile = {"skills": {"tools": ["PostgreSQL"]}}
+        lines = select_bullets.format_skills_section(profile, "We use Postgres daily.")
+        self.assertIn("PostgreSQL*", lines[0])
+        self.assertNotIn("Postgres*", lines[0])  # marked, not relabeled
 
 
 if __name__ == "__main__":

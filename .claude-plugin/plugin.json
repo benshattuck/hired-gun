@@ -1,0 +1,13 @@
+{
+  "name": "hired-gun",
+  "displayName": "Hired Gun",
+  "version": "2.0.0",
+  "description": "A job-search copilot grounded in your own resume: fit scoring, ATS keyword-gap checks, resume tailoring, interview prep, and curated daily job-search digests. No hosted service, no scraping, no telemetry.",
+  "author": {
+    "name": "Ben Shattuck"
+  },
+  "homepage": "https://github.com/benshattuck/hired-gun",
+  "repository": "https://github.com/benshattuck/hired-gun",
+  "license": "MIT",
+  "keywords": ["job-search", "resume", "career", "ats", "interview-prep"]
+}

@@ -1,8 +1,8 @@
 # Keyword-gap analysis method
 
-This is the method `scripts/score_fit.py` and `scripts/gap_report.py`
-work by, written out so you can run it by hand when the scripts aren't
-handy, and so anyone can check the math.
+This is the method `scripts/score_fit.py`, `scripts/gap_report.py`, and
+`scripts/select_bullets.py` all share, written out so you can run it by
+hand when the scripts aren't handy, and so anyone can check the math.
 
 It is deliberately a **heuristic keyword matcher**, not an oracle and not
 an ML model. It's meant to be fast, plain, and auditable — you should
@@ -30,10 +30,16 @@ From the pasted posting text (`sentence_tokens` + `posting_terms` in
    sentence** ("machine learning", "error budget"). Bigrams never cross a
    sentence boundary — "…Kafka. Kubernetes…" must not mint the phantom
    skill "kafka kubernetes".
-6. Also do a direct substring search for every phrase in the candidate's
-   own `skills` + bullet `tags` (from `profile.yaml`) against the raw
-   posting text — this catches multi-word skills a tokenizer would split
-   apart ("event-driven architecture").
+6. Also do a direct word-boundary search (`substring_matches`) for every
+   phrase in the candidate's own `skills` + bullet `tags` (from
+   `profile.yaml`) against the raw posting text — this catches multi-word
+   skills a tokenizer would split apart ("event-driven architecture"),
+   and it's checked against a small curated alias table (`SYNONYMS` in
+   `scripts/_common.py`) in both directions, so "Kubernetes" on the
+   profile matches a posting that only says "k8s," and vice versa. The
+   search is word-boundary-based, not naive substring — a profile listing
+   "java" is never credited for a posting that only says "javascript,"
+   and a short alias like "ts" never matches inside "tests" or "posts."
 
 ## Step 2: check the ledger
 
@@ -101,9 +107,11 @@ E.g.:
 
 ## Known limitations (good first contributions)
 
-- Stemming is crude suffix-stripping, and there's no synonym map — "k8s"
-  and "Kubernetes" still don't match. A small synonym table would help;
-  see `CONTRIBUTING.md`.
+- Stemming is crude suffix-stripping. The `SYNONYMS` alias table in
+  `scripts/_common.py` is intentionally small and curated, not a general
+  synonym engine — it covers a handful of common tech shorthand (k8s,
+  postgres, js/ts, aws, gcp...) and nothing more. Extend the table rather
+  than trying to make it clever; see `CONTRIBUTING.md`.
 - Bigram extraction is naive within a sentence; it doesn't understand
   phrase boundaries.
 - Location parsing is a simple string search, not a geocoder — city
