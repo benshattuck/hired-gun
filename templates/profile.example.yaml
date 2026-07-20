@@ -4,8 +4,15 @@
 # written in it. This is the invariant the whole outfit is built on: every
 # claim made about you in a tailored bullet, a gap report, or an outreach
 # draft has to trace back to something written here. Nothing in this file
-# gets invented by the agent — it rephrases, reorders, or leaves things
-# out. It doesn't add a scar you didn't earn.
+# gets invented by any skill — they rephrase, reorder, or leave things
+# out. Nothing adds a scar you didn't earn.
+#
+# THIS IS A MASTER BANK, NOT A RESUME. Put in every bullet you've ever
+# written for a role, even ones that wouldn't fit on a one-page resume,
+# even ones you haven't used in years. The `tailor-resume` skill's job is
+# to pick the handful most relevant to a given posting — verbatim, no
+# rewording — from whatever you've stocked here. A thin bank gives it
+# nothing to choose from; a deep one is what makes tailoring worth doing.
 #
 # Copy this file to profile.yaml (same directory) and fill it in with your
 # own facts. Delete sections that don't apply to you; add entries freely.
@@ -29,9 +36,12 @@ summary: >
   enjoys mentoring and reducing on-call toil.
 
 # Flat lists of true, current skills — the tools on your belt. Group
-# however suits your trade. These feed both the fit score and the gap
-# report, so keep them accurate and specific ("event-driven architecture",
-# not just "backend").
+# however suits your trade. These feed the fit score, the gap report,
+# and tailor-resume's skills-section pass, so keep them accurate and
+# specific ("event-driven architecture", not just "backend"). A handful
+# of common abbreviations (k8s/Kubernetes, TS/JavaScript's TypeScript,
+# Postgres/PostgreSQL, etc. — see scripts/_common.py's SYNONYMS) are
+# recognized as the same skill either way you write them.
 skills:
   languages: ["Python", "TypeScript", "SQL"]
   frameworks: ["Django", "FastAPI", "React"]
@@ -44,17 +54,29 @@ experience:
     location: "Seattle, WA"
     start: "2022-03"
     end: "present"                 # "present" or "YYYY-MM"
+    # A real resume for one posting would use 2-4 of these, picked by
+    # tailor-resume, verbatim. Keep every bullet you've got here, even
+    # ones you rarely lead with — a deep bank is the whole point.
     bullets:
       # `metrics: true` marks a bullet with a real, verifiable number —
-      # tailoring may reword the sentence but must not change the number
-      # or invent one on a bullet where this is false. Don't notch your
-      # gun for a shot you didn't take.
+      # tailor-resume can select this bullet or leave it out, but never
+      # changes the number or invents one on a bullet where this is
+      # false. Don't notch your gun for a shot you didn't take.
       - text: "Led migration of the billing service from a monolith to event-driven microservices, cutting p99 latency 40%."
         metrics: true
         tags: ["microservices", "event-driven", "latency", "billing"]
       - text: "Mentored 3 junior engineers; two were promoted within a year."
         metrics: true
         tags: ["mentorship", "leadership"]
+      - text: "Redesigned the on-call rotation, cutting after-hours pages by 60% over two quarters."
+        metrics: true
+        tags: ["on-call", "reliability", "incident-response"]
+      - text: "Introduced contract testing between the billing and ledger services, catching breaking changes before deploy."
+        metrics: false
+        tags: ["testing", "microservices", "reliability"]
+      - text: "Partnered with the security team to roll out mTLS between internal services."
+        metrics: false
+        tags: ["security", "microservices", "infrastructure"]
 
   - company: "Prior Co"
     title: "Software Engineer"
@@ -68,6 +90,9 @@ experience:
       - text: "Wrote the on-call runbook that became the team standard."
         metrics: false
         tags: ["on-call", "documentation"]
+      - text: "Migrated the deploy pipeline from Jenkins to GitHub Actions, cutting average build time from 22 to 9 minutes."
+        metrics: true
+        tags: ["ci/cd", "devops", "github-actions"]
 
 education:
   - institution: "University of Example"
